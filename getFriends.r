@@ -1,86 +1,80 @@
 library(rjson)
 library(igraph)
+library(data.table)
+library(magrittr)
+library(dplyr)
 
-setwd("E:/Work/Projects/SocialNetworkAnalysis/")
-url.users <- 'https://api.vk.com/method/groups.getMembers?group_id=1907855'
-users <- fromJSON(file=url.users, method='C')
+remove(users
+       ,bounds
+       ,public.users.info)
 
-url.users.info = vector()
-users.info = vector()
-public.users.info = vector()
-
-
-# получаем информацию о пользователях
-i = 1
-for(x in users$response$users) {
-  url.users.info[i] <- paste('https://api.vk.com/method/users.get?user_id=',
-                             x,
-                             '&fields=first_name,country,last_seen', sep = "")
-  public.users.info[i] <- fromJSON(file=url.users.info[i], method='C')
-  print(i); i = i+1
-}
-source.public.users.info <- public.users.info
-# source.public.users.info -> public.users.info
-
-# чистим от удаленных - ХЗ почему, иногда надо прогнать пару раз
-for (x in 1:length(public.users.info)) {
-  if(!is.null(public.users.info[[x]][[1]]$deactivated)) {
-    public.users.info[[x]] <- NULL
-  }
+# Получает данные по фрагменту `url`
+# подставляет значения в переменные в стиле `sprintf`
+json.get <- function(url.part,...){
+  
+  url.root  <- 'http://api.vk.com/method'  
+  fromJSON(file=sprintf(url.part,url.root,...)
+                  , method='C')
 }
 
-for (x in 1:length(public.users.info)) {
-  if(as.Date(as.POSIXct(public.users.info[[x]][[1]]$last_seen$time, origin="1970-01-01")) < "2014-10-01") {
-    public.users.info[[x]] <- NULL
-  }
+# Получает детальные данные о пользователе по `uid`у,
+# отдает одноуровневый `list`
+get.userinfo = function(uid){  
+
+  # Причесывает набор полей:
+  # * делает структуру плоской
+  # * изменяет значения `NULL` на `[NA]` для совместимости 
+  #   c функцией `rbindlist` из пакета `data.tables`
+  list.select = function(lst){
+    return(list(uid = lst$uid,
+           last_name = lst$last_name,
+           last_seen.time = ifelse(is.null(lst$last_seen$time),c(NA),lst$last_seen$time),
+           country = ifelse(is.null(lst$country),c(NA),lst$country)))
+  }  
+  
+  frends.info <-
+  json.get('%s/friends.get?user_id=%s&fields=first_name,country,last_seen'
+          ,uid)$response %>% 
+    lapply(FUN=function(resp){list.select(resp)}) %>%
+    rbindlist(fill=TRUE,use.names=TRUE)
+  
+  # Пропускаем бездрузейных участников
+  # боты, задроты, моциопаты -- вышли вон!
+  if(nrow(frends.info) == 0){return(NULL)}
+  
+  return(list(
+    user.info = rbindlist(list(list.select(json.get('%s/users.get?user_id=%s&fields=first_name,country,last_seen'
+                                                    ,uid)$response[[1]])
+                              ,frends.info)
+                          ,fill=TRUE,use.names=TRUE)
+    ,bounds = rbindlist(list(list(src=rep(uid,nrow(frends.info))
+                                  ,rsv=frends.info$uid))
+                        ,fill=TRUE,use.names=TRUE)
+    )
+  )
+
 }
 
-for (x in 1:length(public.users.info)) {
-  if(public.users.info[[x]][[1]]$country != 3) {
-    public.users.info[[x]] <- NULL
-  }
-}
+# Получает список членов группы, отдает в виде вектора `uid`ов
+users <- json.get('%s/groups.getMembers?group_id=1907855')$response$users
 
-# получаем информацию о друзьях пользователей
-i = 1
-for(x in 1:length(public.users.info)) {
-  url.users.info[i] <- paste('https://api.vk.com/method/friends.get?user_id=',
-                              public.users.info[[x]][[1]]$uid,
-                              '&fields=first_name,country,last_seen', sep = "")
-  users.info[i] <- fromJSON(file=url.users.info[i], method='C')
-  print(i); i = i+1
-}
+# Получает детальные записи о пользователях,
+# складывает в data.table
+public.users.info <- users[1:150] %>% 
+    lapply(FUN=get.userinfo)
 
+userinfo.all <- public.users.info %>% 
+  lapply(FUN = function(user){user$user.info}) %>% 
+  rbindlist() %>%
+  mutate(last_seen.time = as.Date(as.POSIXct(last_seen.time, origin="1970-01-01"))) %>%
+  filter(last_seen.time > "2014-10-01" & country == 3) %>%
+  distinct(uid)
 
+bounds.all <- public.users.info %>% 
+  lapply(FUN = function(user){user$bounds}) %>% 
+  rbindlist()
 
-# all data stored in file 'data'
-# 
-# load("data")
-# as.Date(as.POSIXct(users.info[[1]][[1]]$last_seen$time, origin="1970-01-01"))
-# as.Date(as.POSIXct(public.users.info[[x]][[1]]$last_seen$time, origin="1970-01-01")) < "2014-07-01"
-
-active.usersID = vector()
-for(x in 1:length(users.info)) {
-  if(
-    is.null(users.info[[x]]$error_code) # проверяем, не заблокирован ли пользователь
-      &
-    length(users.info[[x]]) != 0) # и есть ли у него друзья
-    
-    { active.usersID = append(active.usersID, x) }
-}
-
-u.id = vector(); f.id = vector()
-for (x in active.usersID) { for(y in 1:length(users.info[[x]])) {
-    u.id = append(u.id, users$response$users[x]);
-    f.id = append(f.id, users.info[[x]][[y]]$uid)
-  }
-}
-
-d = as.data.frame(cbind(u.id, f.id))
-write.table(d, "data.csv", sep=";", row.names=F)
-
-
-g <- graph.data.frame(d, directed=FALSE)
+g <- graph.data.frame(bounds.all, directed=FALSE)
 
 summary(g)
 g$layout <- layout.fruchterman.reingold(g)
@@ -91,11 +85,3 @@ clo.score <- round( (clo - min(clo)) * length(clo) / max(clo) ) + 1 # create col
 clo.colors <- rev(heat.colors(max(clo.score)))
 V(g)$color <- clo.colors[ clo.score ]
 plot(g)
-
-
-
-
-
-
-
-
