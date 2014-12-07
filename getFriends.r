@@ -39,7 +39,7 @@ get.userinfo = function(uid){
     rbindlist(fill=TRUE,use.names=TRUE)
   
   # Пропускаем бездрузейных участников
-  # боты, задроты, моциопаты -- вышли вон!
+  # боты, задроты, социопаты -- вышли вон!
   if(nrow(frends.info) == 0){return(NULL)}
   
   return(list(
@@ -52,7 +52,6 @@ get.userinfo = function(uid){
                         ,fill=TRUE,use.names=TRUE)
     )
   )
-
 }
 
 # Получает список членов группы, отдает в виде вектора `uid`ов
@@ -60,20 +59,28 @@ users <- json.get('%s/groups.getMembers?group_id=1907855')$response$users
 
 # Получает детальные записи о пользователях,
 # складывает в data.table
-public.users.info <- users[1:150] %>% 
+public.users.info <- users %>% 
     lapply(FUN=get.userinfo)
 
 userinfo.all <- public.users.info %>% 
+  # выбрать данные о друзьях для каждого члена группы
   lapply(FUN = function(user){user$user.info}) %>% 
+  # склеить все в одну дата-таблицу
   rbindlist() %>%
+  # привести дату последнего визита из unixtime::int в POSIX-дату
   mutate(last_seen.time = as.Date(as.POSIXct(last_seen.time, origin="1970-01-01"))) %>%
+  # убрать всез не-белорусов которых не видно было с 2014-10-01
   filter(last_seen.time > "2014-10-01" & country == 3) %>%
+  # отобрать уникальные записи
   distinct(uid)
 
+# склеить таблицы связей каждого члена группы в одну
 bounds.all <- public.users.info %>% 
   lapply(FUN = function(user){user$bounds}) %>% 
   rbindlist()
 
+# что-то про стройку графов
+# TODO: переписать
 g <- graph.data.frame(bounds.all, directed=FALSE)
 
 summary(g)
