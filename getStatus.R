@@ -1,7 +1,7 @@
 # http://sentistrength.wlv.ac.uk/results.php?text=....&submit=Detect+Sentiment+in+Russian
 # library(jsonlite)
-# setwd("/home/capsula/work/SNA/")
 
+# */20 * * * * Rscript /home/capsula/work/SNA/getStatus.R
 getStatus <- function(uid) {
   url = sprintf("http://api.vk.com/method/users.get?uids=%s&fields=status", uid)
   res <- jsonlite::fromJSON(url)
