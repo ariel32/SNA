@@ -2,6 +2,8 @@
 # library(jsonlite)
 # */20 * * * * Rscript /home/capsula/work/SNA/getStatus.R
 
+#jsonlite::fromJSON(sprintf("http://api.vk.com/method/friends.get?user_id=%s", getStatus("salut_ice")$uid))
+setwd("/home/capsula/work/SNA/")
 
 getStatus <- function(uid) {
   url = sprintf("http://api.vk.com/method/users.get?uids=%s&fields=status", uid)
@@ -43,5 +45,17 @@ getStatusUpdate <- function(uid) {
     write.table(x = status.update, file = "data.csv", sep = ";", append = T, col.names = F, row.names = F)  
   }
 }
+
+getFriends <- function(uid) {
+  url = sprintf("http://api.vk.com/method/friends.get?user_id=%s&fields=nickname", getStatus(uid)$uid)
+  
+  res <- jsonlite::fromJSON(url)
+  res <- res$response
+  
+  return(res)
+}
+
+
+
 
 getStatusUpdate("salut_ice")
