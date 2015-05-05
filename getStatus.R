@@ -1,7 +1,8 @@
 # http://sentistrength.wlv.ac.uk/results.php?text=....&submit=Detect+Sentiment+in+Russian
 # library(jsonlite)
-
 # */20 * * * * Rscript /home/capsula/work/SNA/getStatus.R
+
+
 getStatus <- function(uid) {
   url = sprintf("http://api.vk.com/method/users.get?uids=%s&fields=status", uid)
   res <- jsonlite::fromJSON(url)
@@ -44,13 +45,3 @@ getStatusUpdate <- function(uid) {
 }
 
 getStatusUpdate("salut_ice")
-
-library(sendmailR)
-
-from <- ""
-to <- "<ab2ec645-f034-6f44-1501-9e3dd2592542+375336133966@sms.ru>"
-subject <- ""
-body <- "test"
-mailControl=list(smtpServer="ASPMX.L.GOOGLE.COM")
-
-sendmail(from=from,to=to,subject=subject,msg=body,control=mailControl)
