@@ -12,7 +12,7 @@ getUserInfo <- function(uid, fields = "all") {
   if (fields == "all"){
     fields = "sex,bdate,city,country,contacts,education,universities,schools,relation,activities,last_seen"
   }
-  
+  Sys.sleep(0.5)
   url = sprintf("https://api.vk.com/method/users.get?uids=%s&fields=%s&access_token=%s", uid, fields, ACCESS_TOKEN)
   res <- fromJSON(url)$response
   return(res)
@@ -45,18 +45,27 @@ getGropus <- function(uid) {
 }
 
 sendMessage <- function(uid, message) {
+  message = gsub(" ", "%20", message)
   url = sprintf("https://api.vk.com/method/messages.send?user_id=%s&message=%s&access_token=%s",
                 getUserInfo(uid)$uid, message, ACCESS_TOKEN)
   res <- fromJSON(url)$response
-  
+
   return(res)
+}
+getError <- function(object) {
+  # обрабатываем ошибки объекта user
+  if("deactivated" %in% names(object) && object$deactivated == "deleted") return("DELETED")
+  if("deactivated" %in% names(object) && object$deactivated == "banned") return("BANNED")  
 }
 
 
 
-
-
-
+searchVGMUstudents <- function(offset) {
+  url = sprintf("https://api.vk.com/method/users.search?university=2918&count=1000&offset=%s&access_token=%s",
+                offset, ACCESS_TOKEN)
+  res <- fromJSON(url)$response
+  return(res)
+}
 
 
 
