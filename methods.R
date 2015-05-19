@@ -52,19 +52,33 @@ sendMessage <- function(uid, message) {
 
   return(res)
 }
-getMessage <- function(count=1) {
-  url = sprintf("https://api.vk.com/method/messages.get?count=%s&access_token=%s",
-                count, ACCESS_TOKEN)
-  res <- fromJSON(url)$response
-  for(x in 1:count) {
-    if (res[[x+1]]$read_state != 1) {
+getMessage <- function(uid="", count=1) {
+  # если задан конкретный пользователь, возвращаем историю переписки с ним
+  if(uid != "") {
+    url = sprintf("https://api.vk.com/method/messages.getHistory?count=%s&user_id=%s&access_token=%s",
+                  count, getUserInfo(uid)$uid, ACCESS_TOKEN)
+    res <- fromJSON(url)$response
+    for(x in 1:count) {
       print(sprintf("%s %s: %s",
                     getUserInfo(res[[x+1]]$uid)$first_name,
                     getUserInfo(res[[x+1]]$uid)$last_name,
                     res[[x+1]]$body))
+      }
     } else {
-      print("------------------")
-      break
+    url = sprintf("https://api.vk.com/method/messages.get?count=%s&access_token=%s",
+                  count, ACCESS_TOKEN)
+    res <- fromJSON(url)$response
+    for(x in 1:count) {
+      if (res[[x+1]]$read_state != 1) {
+        print(sprintf("%s %s (%s): %s",
+                      getUserInfo(res[[x+1]]$uid)$first_name,
+                      getUserInfo(res[[x+1]]$uid)$last_name,
+                      res[[x+1]]$uid,
+                      res[[x+1]]$body))
+      } else {
+        print("------------------")
+        break
+      }
     }
   }
 }
