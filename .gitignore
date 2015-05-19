@@ -1,6 +1,4 @@
 .Rproj.user
 .Rhistory
 .RData
-data.csv
-friends.csv
-secret.R
+/data

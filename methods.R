@@ -1,12 +1,12 @@
 library(jsonlite)
 setwd("/home/capsula/work/SNA/")
-source("secret.R") # токен находится в переменной ACCESS_TOKEN
+source("data/secret.R") # токен находится в переменной ACCESS_TOKEN
 
 id0 = 6529847
 APP_ID = 4917761
 VERSION_API = 5.32
 
-# MAKE A FUNCTION FOR CAPTCHA PROCESSING
+
 
 getUserInfo <- function(uid, fields = "all") {
   if (fields == "all"){
