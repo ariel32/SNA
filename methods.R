@@ -7,7 +7,6 @@ APP_ID = 4917761
 VERSION_API = 5.32
 
 
-
 getUserInfo <- function(uid, fields = "all") {
   if (fields == "all"){
     fields = "sex,bdate,city,country,contacts,education,universities,schools,relation,activities,personal,last_seen"
