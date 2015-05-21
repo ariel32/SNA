@@ -36,16 +36,18 @@ getWallSearch <- function(uid, query) {
   return(res)
 }
 getWallPosts <- function(uid) {
+  if(!is.numeric(uid) | uid > 0) {uid <- getUserInfo(uid)$uid}
   url = sprintf("https://api.vk.com/method/wall.get?owner_id=%s&count=100&access_token=%s",
-                getUserInfo(uid)$uid, ACCESS_TOKEN)
+                uid, ACCESS_TOKEN)
   res <- fromJSON(url)$response
   postCount = res[[1]]
   posts = res[2:101]
   for(x in 1:floor(postCount/100)) {
     url = sprintf("https://api.vk.com/method/wall.get?owner_id=%s&count=100&offset=%s&access_token=%s",
-                  getUserInfo(uid)$uid, x*100, ACCESS_TOKEN)
+                  uid, x*100, ACCESS_TOKEN)
     res <- fromJSON(url)$response
     posts = append(posts, res[2:101])
+    print(sprintf("%s/%s", x, floor(postCount/100)))
   }
   
   return(Filter(Negate(is.null), posts))
