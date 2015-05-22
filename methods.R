@@ -12,9 +12,17 @@ getUserInfo <- function(uid, fields = "all") {
     fields = "sex,bdate,city,country,contacts,education,universities,schools,relation,activities,personal,last_seen"
   }
   Sys.sleep(0.5)
+  
   url = sprintf("https://api.vk.com/method/users.get?uids=%s&fields=%s&access_token=%s", uid, fields, ACCESS_TOKEN)
-  res <- fromJSON(url)$response
-  return(res)
+  res <- fromJSON(url)
+  
+  if("error" %in% names(res) && "captcha_sid" %in% names(res$error))
+    { url = sprintf("https://api.vk.com/method/users.get?uids=%s&fields=%s&access_token=%s%s",
+                    uid, fields, ACCESS_TOKEN, getCaptcha(res))
+      print(url)
+      res <- fromJSON(url)$response
+      return(res)
+  } else { return(res$response) }
 }
 getFriends <- function(uid) {
   url = sprintf("https://api.vk.com/method/friends.get?user_id=%s&fields=uid&access_token=%s", getUserInfo(uid)$uid, ACCESS_TOKEN)
@@ -98,10 +106,10 @@ getMessage <- function(uid="", count=1) {
     }
   }
 }
-getError <- function(object) {
-  # обрабатываем ошибки объекта user
-  if("deactivated" %in% names(object) && object$deactivated == "deleted") return("DELETED")
-  if("deactivated" %in% names(object) && object$deactivated == "banned") return("BANNED")  
+getCaptcha <- function(object) {
+    promt <- sprintf("CAPTHCA needed:%s, enter symbols: ", object$error$captcha_img)
+    captcha <- readline(promt)
+    
+    res <- sprintf("&captcha_sid=%s&captcha_key=%s", object$error$captcha_sid, captcha)
+    return(res)
 }
-
-

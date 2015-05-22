@@ -7,18 +7,23 @@ library(wordcloud)
 
 a <- getWallPosts(-62338399)
 d = vector()
-for(x in 1:length(a)) d = append(d, a[[x]]$text)
+for(x in 1:length(a)) d = append(d, paste("", a[[x]]$text, ""))
 rm(a)
 
+d <- gsub("(?<=[[:blank:]])[[:graph:]]{7,}(?=[[:blank:]])", " ", d ,perl = T) # удаляем слова длиной больше 7
+d <- gsub("(?<=[[:blank:]])[[:graph:]]{0,3}(?=[[:blank:]])", " ", d ,perl = T) # удаляем слова длиной меньше 3
+
+d <- gsub("^\\s+|\\s+$", "", d) # удаляем пробелы в начале и конце - мы их до этого героически впендюрили
 d <- gsub("<br>", " ", d)
-d <- gsub("[[:punct:]]", " ", d)
-d <- gsub("^ *|(?<= ) | *$", "", d, perl = TRUE)
+d <- gsub("[[:punct:]]", " ", d) # удаляем пунктуацию
+d <- gsub("^ *|(?<= ) | *$", "", d, perl = TRUE) # удаляем множественные пробелы
 
 myCorpus <- Corpus(VectorSource(d))
 myCorpus <- tm_map(myCorpus, content_transformer(tolower), lazy=T)
 myCorpus <- tm_map(myCorpus, removeNumbers, lazy=T)
-#mystopwords <- sort(unique(mystopwords)); write(mystopwords, "stop-words.txt")
+
 mystopwords = readLines("stop-words.txt")
+#mystopwords <- sort(unique(mystopwords)); write(mystopwords, "stop-words.txt")
 
 myCorpus <- tm_map(myCorpus, removeWords, mystopwords, lazy=T)
 myCorpus <- tm_map(myCorpus, stripWhitespace, lazy=T)
