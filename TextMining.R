@@ -5,9 +5,10 @@ library(jsonlite)
 library(tm)
 library(wordcloud)
 
-a <- getWallPosts(-62338399); d = vector()
+a <- getWallPosts(-62338399)
+d = vector()
 for(x in 1:length(a)) d = append(d, a[[x]]$text)
-
+rm(a)
 d <- gsub("<br>", " ", d)
 d <- gsub("[[:punct:]]", " ", d)
 d <- gsub("^ *|(?<= ) | *$", "", d, perl = TRUE)
