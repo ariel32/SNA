@@ -5,19 +5,23 @@ library(jsonlite)
 library(tm)
 library(wordcloud)
 
-a <- getWallPosts(-62338399); d = vector()
+a <- getWallPosts(-62338399)
+d = vector()
 for(x in 1:length(a)) d = append(d, a[[x]]$text)
+rm(a)
 
 d <- gsub("<br>", " ", d)
 d <- gsub("[[:punct:]]", " ", d)
 d <- gsub("^ *|(?<= ) | *$", "", d, perl = TRUE)
 
 myCorpus <- Corpus(VectorSource(d))
-myCorpus <- tm_map(myCorpus, content_transformer(tolower))
-myCorpus <- tm_map(myCorpus, removeNumbers)
+myCorpus <- tm_map(myCorpus, content_transformer(tolower), lazy=T)
+myCorpus <- tm_map(myCorpus, removeNumbers, lazy=T)
+#mystopwords <- sort(unique(mystopwords)); write(mystopwords, "stop-words.txt")
 mystopwords = readLines("stop-words.txt")
-myCorpus <- tm_map(myCorpus, removeWords, mystopwords)
-myCorpus <- tm_map(myCorpus, stripWhitespace)
+
+myCorpus <- tm_map(myCorpus, removeWords, mystopwords, lazy=T)
+myCorpus <- tm_map(myCorpus, stripWhitespace, lazy=T)
 
 
 
