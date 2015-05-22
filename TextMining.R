@@ -9,7 +9,10 @@ a <- getWallPosts(-62338399)
 d = vector()
 for(x in 1:length(a)) d = append(d, a[[x]]$text)
 rm(a)
+<<<<<<< HEAD
 
+=======
+>>>>>>> 57422d2af8287687a3c21995384f6bbc71f09e8c
 d <- gsub("<br>", " ", d)
 d <- gsub("[[:punct:]]", " ", d)
 d <- gsub("^ *|(?<= ) | *$", "", d, perl = TRUE)
@@ -17,8 +20,9 @@ d <- gsub("^ *|(?<= ) | *$", "", d, perl = TRUE)
 myCorpus <- Corpus(VectorSource(d))
 myCorpus <- tm_map(myCorpus, content_transformer(tolower), lazy=T)
 myCorpus <- tm_map(myCorpus, removeNumbers, lazy=T)
-#mystopwords <- sort(unique(mystopwords)); write(mystopwords, "stop-words.txt")
+
 mystopwords = readLines("stop-words.txt")
+#mystopwords <- sort(unique(mystopwords)); write(mystopwords, "stop-words.txt")
 
 myCorpus <- tm_map(myCorpus, removeWords, mystopwords, lazy=T)
 myCorpus <- tm_map(myCorpus, stripWhitespace, lazy=T)
