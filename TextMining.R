@@ -5,28 +5,30 @@ library(jsonlite)
 library(tm)
 library(wordcloud)
 
+
 a <- getWallPosts(-62338399)
 d = vector()
 for(x in 1:length(a)) d = append(d, paste("", a[[x]]$text, ""))
 rm(a)
-
+# IT IS WORK! gsub("\\b[[:alnum:]]{1,6}\\b", "", a)
 d <- gsub("(?<=[[:blank:]])[[:graph:]]{7,}(?=[[:blank:]])", " ", d ,perl = T) # удаляем слова длиной больше 7
-d <- gsub("(?<=[[:blank:]])[[:graph:]]{0,3}(?=[[:blank:]])", " ", d ,perl = T) # удаляем слова длиной меньше 3
-
+d <- gsub("\\b[[:alnum:]]{1,3}\\b", " ", d) # удаляем слова с длиной меньше 3
+d <- gsub("\\b[[:alnum:]]{7,}\\b", " ", d) # удаляем слова длиной больше 7
 d <- gsub("^\\s+|\\s+$", "", d) # удаляем пробелы в начале и конце - мы их до этого героически впендюрили
 d <- gsub("<br>", " ", d)
 d <- gsub("[[:punct:]]", " ", d) # удаляем пунктуацию
 d <- gsub("^ *|(?<= ) | *$", "", d, perl = TRUE) # удаляем множественные пробелы
 
+#myCorpus <- Corpus(VectorSource(enc2native(d)))
 myCorpus <- Corpus(VectorSource(d))
-myCorpus <- tm_map(myCorpus, content_transformer(tolower), lazy=T)
-myCorpus <- tm_map(myCorpus, removeNumbers, lazy=T)
+myCorpus <- tm_map(myCorpus, content_transformer(tolower))
+#myCorpus <- tm_map(myCorpus, removeNumbers)
 
 mystopwords = readLines("stop-words.txt")
 #mystopwords <- sort(unique(mystopwords)); write(mystopwords, "stop-words.txt")
 
-myCorpus <- tm_map(myCorpus, removeWords, mystopwords, lazy=T)
-myCorpus <- tm_map(myCorpus, stripWhitespace, lazy=T)
+myCorpus <- tm_map(myCorpus, removeWords, mystopwords)
+
 
 
 
