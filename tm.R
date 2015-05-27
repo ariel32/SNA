@@ -22,13 +22,11 @@ d <- gsub("\\b[[:alnum:]]{7,}\\b", " ", d) # удаляем слова длин�
 d <- gsub("^ +|[[:space:]]+| +$", " ", d, perl = TRUE) # удаляем множественные пробелы
 for(x in 1:length(d)) {if(nchar(d[x]) != 0) {d[x] = u_to_lower_case(d[x])}} # переводим в нижний регистр
 
-#myCorpus <- Corpus(VectorSource(enc2native(d)))
 myCorpus <- Corpus(VectorSource(d))
+
 mystopwords = readLines("stop-words.txt")
 #mystopwords <- sort(unique(mystopwords)); write(mystopwords, "stop-words.txt")
 myCorpus <- tm_map(myCorpus, removeWords, mystopwords)
-
-
 
 
 myDtm <- TermDocumentMatrix(myCorpus, control = list(minWordLength = 1))
