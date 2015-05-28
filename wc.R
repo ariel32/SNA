@@ -1,27 +1,30 @@
-rm(list = ls())
 source("methods.R")
-
 library(jsonlite)
 library(Unicode)
 library(tm)
 library(wordcloud)
-#library(magrittr)
 
-#https://sites.google.com/site/miningtwitter/questions/talking-about/wordclouds/comparison-cloud
+uid <- getUserInfo("salut_ice")$uid
+url = sprintf("https://api.vk.com/method/messages.getHistory?count=%s&user_id=%s&access_token=%s",
+              100, uid, ACCESS_TOKEN)
 
-a <- getWallPosts(-62338399)
+res <- fromJSON(url)$response
+
+postCount = res[[1]]
+posts = res[2:101]
+
+for(x in 1:floor(postCount/100)) {
+  url = sprintf("https://api.vk.com/method/messages.getHistory?user_id=%s&count=100&offset=%s&access_token=%s",
+                uid, x*100, ACCESS_TOKEN)
+  res <- fromJSON(url)$response
+  posts = append(posts, res[2:101])
+  print(sprintf("%s/%s", x, floor(postCount/100)))
+}
+
+a <- Filter(Negate(is.null), posts)
 d = vector()
-for(x in 1:length(a)) d = append(d, a[[x]]$text)
-rm(a)
+for(x in 1:length(a)) d = append(d, a[[x]]$body)
 
-# d %>% gsub('<.+?>',' ',.) %>% # Тэги? В моя корпус? 
-#   %>% gsub('http:/[^[:space:]<>]+',' ',.) # ссылки -- вон!
-#   %>% gsub('https:/[^[:space:]<>]+',' ',.) # ссылки -- вон!
-#   %>% gsub("\\d", " ", .) # удаляем цифры
-#   %>% gsub("[[:punct:]]", " ", .) # удаляем пунктуацию
-#   %>% gsub("\\b[[:alnum:]]{1,4}\\b", " ", .) # удаляем слова с длиной меньше 3
-#   %>% gsub("\\b[[:alnum:]]{7,}\\b", " ", .) # удаляем слова длиной больше 7
-#   -> d
 
 d <- gsub('<.+?>',' ',d) # Тэги? В моя корпус?
 d <- gsub('http:/[^[:space:]<>]+',' ',d) # ссылки -- вон!
@@ -38,10 +41,6 @@ mystopwords = readLines("stop-words.txt")
 d <- removeWords(d, mystopwords)
 
 myCorpus <- Corpus(VectorSource(d))
-
-myDtm <- TermDocumentMatrix(myCorpus, control = list(minWordLength = 1))
-findFreqTerms(myDtm, lowfreq=20)
-findAssocs(myDtm, 'пиво', 0.50)
 
 ap.tdm <- TermDocumentMatrix(myCorpus)
 ap.m <- as.matrix(ap.tdm)
