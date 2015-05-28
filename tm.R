@@ -28,7 +28,6 @@ mystopwords = readLines("stop-words.txt")
 #mystopwords <- sort(unique(mystopwords)); write(mystopwords, "stop-words.txt")
 myCorpus <- tm_map(myCorpus, removeWords, mystopwords)
 
-
 myDtm <- TermDocumentMatrix(myCorpus, control = list(minWordLength = 1))
 findFreqTerms(myDtm, lowfreq=1000)
 findAssocs(myDtm, 'пиво', 0.50)
