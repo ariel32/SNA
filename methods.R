@@ -72,7 +72,7 @@ sendMessage <- function(uid, message) {
   message = gsub(" ", "%20", message)
   url = sprintf("https://api.vk.com/method/messages.send?user_id=%s&message=%s&access_token=%s",
                 getUserInfo(uid)$uid, message, ACCESS_TOKEN)
-  res <- fromJSON(url)$response
+  res <- fromJSON(url)
 
   return(res)
 }
