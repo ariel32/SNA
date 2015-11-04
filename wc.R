@@ -31,18 +31,20 @@ d <- gsub('http:/[^[:space:]<>]+',' ',d) # ссылки -- вон!
 d <- gsub('https:/[^[:space:]<>]+',' ',d) # ссылки -- вон!
 d <- gsub("\\d", " ", d) # удаляем цифры
 d <- gsub("[[:punct:]]", " ", d) # удаляем пунктуацию
-d <- gsub("\\b[[:alnum:]]{1,3}\\b", " ", d) # удаляем слова с длиной меньше 3
-d <- gsub("\\b[[:alnum:]]{8,}\\b", " ", d) # удаляем слова длиной больше 7
-d <- d[-which(d == " " | d == "")]
+d <- gsub("\\b[[:alnum:]]{1,4}\\b", " ", d) # удаляем слова с длиной меньше 5
+d <- gsub("\\b[[:alnum:]]{7,}\\b", " ", d) # удаляем слова длиной больше 6
 mystopwords = readLines("stop-words.txt")
 d <- removeWords(d, mystopwords)
 d <- gsub("^ +|[[:space:]]+| +$", " ", d, perl = TRUE) # удаляем множественные пробелы
 d <- gsub("^\\s+|\\s+$", "", d) # удаляем пробелы в начале и конце строки
+d <- d[-which(d == " " | d == "")]
 for(x in 1:length(d)) {if(nchar(d[x]) != 0) {d[x] = u_to_lower_case(d[x])}} # переводим в нижний регистр
 
 
 myCorpus <- Corpus(VectorSource(d))
-myCorpus <- tm_map(myCorpus, stemDocument)
+#myCorpus <- tm_map(myCorpus, stemDocument)
+
+save(myCorpus, file = "data/myCorpus"); rm(list = ls()); load("data/myCorpus")
 
 ap.tdm <- TermDocumentMatrix(myCorpus)
 ap.m <- as.matrix(ap.tdm)
